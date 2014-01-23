@@ -1,12 +1,12 @@
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " File:           numbers.vim
-" Maintainer:     Mahdi Yusuf yusuf.mahdi@gmail.com
-" Version:        0.1.0
-" Description:    vim global plugin for better line numbers.
-" Last Change:    26 June, 2012
+" Maintainer:     Benedykt Przybyło b3niup@gmail.com
+" Version:        0.4.1
+" Description:    my fork of vim global plugin for better line numbers.
+" Last Change:    23 January, 2014
 " License:        MIT License
 " Location:       plugin/numbers.vim
-" Website:        https://github.com/myusuf3/numbers.vim
+" Website:        https://github.com/b3niup/numbers.vim
 "
 " See numbers.txt for help.  This can be accessed by doing:
 "
@@ -14,80 +14,130 @@
 " :help numbers
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-let s:numbers_version = '0.1.0'
+let s:numbers_version = '0.4.1'
+
+if exists("g:loaded_numbers") && g:loaded_numbers
+    finish
+endif
+let g:loaded_numbers = 1
+
+if (!exists('g:enable_numbers'))
+    let g:enable_numbers = 1
+endif
+
+if v:version < 703 || &cp
+    echomsg "numbers.vim: you need at least Vim 7.3 and 'nocp' set"
+    echomsg "Failed loading numbers.vim"
+    finish
+endif
+
 
 "Allow use of line continuation
 let s:save_cpo = &cpo
 set cpo&vim
 
-if exists("g:numbers") || v:version < 703 || &cp
-    let &cpo = s:save_cpo
-    echom 'Requires Vim 7.3+'
-    echom 'Failed loading numbers.vim'
-    finish
-endif
+let s:mode = 0
+let s:lock = 0
 
-let g:numbers=1
-let g:mode=0
-let g:center=1 
-
-function! SetNumbers()
-    let g:mode = 1
-    call ResetNumbers()
-endfunc
+function! NumbersRelativeOff()
+    if v:version > 703 || (v:version == 703 && has('patch1115'))
+        set norelativenumber
+    else
+        set number
+    endif
+endfunction
 
 function! SetRelative()
-    let g:mode = 0
-    call ResetNumbers()
+    if (s:lock == 0)
+        let s:mode = 0
+        set relativenumber
+        set number
+    endif
 endfunc
 
-function! NumbersToggle()
-    if (g:mode == 1)
-        let g:mode = 0
-        set relativenumber
-    elseif (g:mode == 0)
-        let g:mode = 2
+function! SetNumbers()
+    if (s:lock == 0)
+        let s:mode = 1
+        call NumbersRelativeOff()
         set number
-    else
-        let g:mode = 1
+    endif
+endfunc
+
+function! SetHidden()
+    if (s:lock == 0)
+        let s:mode = 2
+        call NumbersRelativeOff()
         set nonumber
     endif
 endfunc
 
-function! ResetNumbers()
-    if(g:center == 0)
-        set number
-    elseif(g:mode == 0)
-        set relativenumber
+function! NumbersToggle()
+    if (s:mode == 1)
+        call SetHidden()
+        let s:lock = 1
+    elseif (s:mode == 2)
+        let s:lock = 0
+        call SetRelative()
+    elseif (s:mode == 0)
+        let s:lock = 0
+        call SetNumbers()
+    endif
+endfunc
+
+function! NumbersReset()
+    if (s:mode == 0)
+        call SetRelative()
+    elseif (s:mode == 1)
+        call SetNumbers()
+    elseif (s:mode == 1)
+        call SetHidden()
+    endif
+endfunc
+
+function! NumbersEnable()
+    let s:lock = 0
+    let g:enable_numbers = 1
+    :set relativenumber
+    augroup enable
+        au!
+        autocmd InsertEnter * :call SetNumbers()
+        autocmd InsertLeave * :call SetRelative()
+        autocmd BufNewFile  * :call NumbersReset()
+        autocmd BufReadPost * :call NumbersReset()
+        autocmd WinEnter    * :call SetRelative()
+        autocmd WinLeave    * :call SetNumbers()
+    augroup END
+endfunc
+
+function! NumbersDisable()
+    let s:lock = 1
+    let g:enable_numbers = 0
+    :set nu
+    :set nu!
+    :set rnu!
+    augroup disable
+        au!
+        au! enable
+    augroup END
+endfunc
+
+function! NumbersOnOff()
+    if (g:enable_numbers == 1)
+        call NumbersDisable()
     else
-        set number
-    end
+        call NumbersEnable()
+    endif
 endfunc
-
-function! Center()
-    let g:center = 1
-    call ResetNumbers()
-endfunc
-
-function! Uncenter()
-    let g:center = 0
-    call ResetNumbers()
-endfunc
-
-" Triggers mode based on events
-augroup NumbersAug
-    au!
-    autocmd InsertEnter * :call SetNumbers()
-    autocmd InsertLeave * :call SetRelative()
-    autocmd CursorMoved * :call SetRelative()
-    autocmd BufNewFile  * :call ResetNumbers()
-    autocmd BufReadPost * :call ResetNumbers()
-    autocmd FocusLost   * :call Uncenter()
-    autocmd FocusGained * :call Center()
-augroup END
 
 " Commands
 command! -nargs=0 NumbersToggle call NumbersToggle()
+command! -nargs=0 NumbersEnable call NumbersEnable()
+command! -nargs=0 NumbersDisable call NumbersDisable()
+command! -nargs=0 NumbersOnOff call NumbersOnOff()
 
 " reset &cpo back to users setting
 let &cpo = s:save_cpo
+
+if (g:enable_numbers)
+    call NumbersEnable()
+endif
