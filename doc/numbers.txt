@@ -27,15 +27,15 @@ and disabling the plugin.
 ==============================================================================
 2. CONFIGURATION                                       *numbers-configuration*
 
-                                                            *g:enable_numbers*
-g:enable_numbers~
+                                                            *g:numbers_enable*
+g:numbers_enable~
 
 Default: 1
 
 If you want to disable contextual switching on startup, you can do the
 following: >
 
-    let g:enable_numbers = 0
+    let g:numbers_enable = 0
 <
 
 For convenience you may want to add a mapping for |:NumbersToggle|.

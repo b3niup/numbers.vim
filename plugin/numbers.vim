@@ -16,13 +16,13 @@
 
 let s:numbers_version = '0.4.1'
 
-if exists("g:loaded_numbers") && g:loaded_numbers
+if exists("g:numbers_loaded") && g:numbers_loaded
     finish
 endif
-let g:loaded_numbers = 1
+let g:numbers_loaded = 1
 
-if (!exists('g:enable_numbers'))
-    let g:enable_numbers = 1
+if (!exists('g:numbers_enable'))
+    let g:numbers_enable = 1
 endif
 
 if v:version < 703 || &cp
@@ -96,7 +96,7 @@ endfunc
 
 function! NumbersEnable()
     let s:lock = 0
-    let g:enable_numbers = 1
+    let g:numbers_enable = 1
     :set relativenumber
     augroup enable
         au!
@@ -111,7 +111,7 @@ endfunc
 
 function! NumbersDisable()
     let s:lock = 1
-    let g:enable_numbers = 0
+    let g:numbers_enable = 0
     :set nu
     :set nu!
     :set rnu!
@@ -122,7 +122,7 @@ function! NumbersDisable()
 endfunc
 
 function! NumbersOnOff()
-    if (g:enable_numbers == 1)
+    if (g:numbers_enable == 1)
         call NumbersDisable()
     else
         call NumbersEnable()
@@ -138,6 +138,6 @@ command! -nargs=0 NumbersOnOff call NumbersOnOff()
 " reset &cpo back to users setting
 let &cpo = s:save_cpo
 
-if (g:enable_numbers)
+if (g:numbers_enable)
     call NumbersEnable()
 endif
