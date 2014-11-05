@@ -50,6 +50,21 @@ As a workaround for an issue where |InsertLeave| event is not called with
     inoremap <C-c> <Esc><Esc>
 <
 
+
+
+                                                            *g:numbers_exclude*
+g:numbers_exclude~
+
+Default: ['minibufexpl', 'nerdtree', 'unite', 'tagbar', 'startify', 'gundo',
+'vimshell', 'w3m']
+
+If you want to hide numbers in specific files or plugins you can use this
+variable:
+>
+    let g:numbers_exclude = ['minibufexpl', 'nerdtree', 'html']
+<
+
+
 ==============================================================================
 3. COMMANDS                                                 *numbers-commands*
 

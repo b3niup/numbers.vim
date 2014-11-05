@@ -1,9 +1,9 @@
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " File:           numbers.vim
 " Maintainer:     Benedykt Przybyło b3niup@gmail.com
-" Version:        0.4.1
+" Version:        0.5.0
 " Description:    my fork of vim global plugin for better line numbers.
-" Last Change:    23 January, 2014
+" Last Change:    5 November, 2014
 " License:        MIT License
 " Location:       plugin/numbers.vim
 " Website:        https://github.com/b3niup/numbers.vim
@@ -14,7 +14,7 @@
 " :help numbers
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-let s:numbers_version = '0.4.1'
+let s:numbers_version = '0.5.0'
 
 if exists("g:numbers_loaded") && g:numbers_loaded
     finish
@@ -23,6 +23,10 @@ let g:numbers_loaded = 1
 
 if (!exists('g:numbers_enable'))
     let g:numbers_enable = 1
+endif
+
+if (!exists('g:numbers_exclude'))
+    let g:numbers_exclude = ['minibufexpl', 'nerdtree', 'unite', 'tagbar', 'startify', 'gundo', 'vimshell', 'w3m']
 endif
 
 if v:version < 703 || &cp
@@ -36,9 +40,6 @@ endif
 let s:save_cpo = &cpo
 set cpo&vim
 
-let s:mode = 0
-let s:lock = 0
-
 function! NumbersRelativeOff()
     if v:version > 703 || (v:version == 703 && has('patch1115'))
         set norelativenumber
@@ -48,73 +49,81 @@ function! NumbersRelativeOff()
 endfunction
 
 function! SetRelative()
-    if (s:lock == 0)
-        let s:mode = 0
-        set relativenumber
-        set number
-    endif
+    let w:mode = 0
+    call NumbersReset()
 endfunc
 
 function! SetNumbers()
-    if (s:lock == 0)
-        let s:mode = 1
-        call NumbersRelativeOff()
-        set number
-    endif
+    let w:mode = 1
+    call NumbersReset()
 endfunc
 
 function! SetHidden()
-    if (s:lock == 0)
-        let s:mode = 2
-        call NumbersRelativeOff()
-        set nonumber
-    endif
+    let w:mode = 2
+    call NumbersReset()
 endfunc
 
 function! NumbersToggle()
-    if (s:mode == 1)
+    if (w:mode == 1)
         call SetHidden()
-        let s:lock = 1
-    elseif (s:mode == 2)
-        let s:lock = 0
+        let w:lock = 1
+    elseif (w:mode == 2)
+        let w:lock = 0
         call SetRelative()
-    elseif (s:mode == 0)
-        let s:lock = 0
+    elseif (w:mode == 0)
+        let w:lock = 0
         call SetNumbers()
     endif
 endfunc
 
 function! NumbersReset()
-    if (s:mode == 0)
-        call SetRelative()
-    elseif (s:mode == 1)
-        call SetNumbers()
-    elseif (s:mode == 1)
-        call SetHidden()
+    if (!exists('w:mode'))
+        let w:mode = 0
+    endif
+    if (!exists('w:lock'))
+        let w:lock = 0
+    endif
+
+    if (w:lock == 1)
+        return
+    endif
+
+    if index(g:numbers_exclude, &ft) >= 0
+        let w:mode = 2
+    endif
+
+    if (w:mode == 0)
+        set relativenumber
+        set number
+    elseif (w:mode == 1)
+        call NumbersRelativeOff()
+        set number
+    elseif (w:mode == 2)
+        call NumbersRelativeOff()
+        set nonumber
     endif
 endfunc
 
 function! NumbersEnable()
-    let s:lock = 0
     let g:numbers_enable = 1
-    :set relativenumber
+    let w:lock = 0
+    call SetRelative()
     augroup enable
         au!
         autocmd InsertEnter * :call SetNumbers()
         autocmd InsertLeave * :call SetRelative()
         autocmd BufNewFile  * :call NumbersReset()
         autocmd BufReadPost * :call NumbersReset()
+        autocmd FileType    * :call NumbersReset()
         autocmd WinEnter    * :call SetRelative()
         autocmd WinLeave    * :call SetNumbers()
     augroup END
 endfunc
 
 function! NumbersDisable()
-    let s:lock = 1
+    call SetHidden()
+    let w:lock = 1
     let g:numbers_enable = 0
-    :set nu
-    :set nu!
-    :set rnu!
     augroup disable
         au!
         au! enable
@@ -130,10 +139,10 @@ function! NumbersOnOff()
 endfunc
 
 " Commands
-command! -nargs=0 NumbersToggle call NumbersToggle()
-command! -nargs=0 NumbersEnable call NumbersEnable()
+command! -nargs=0 NumbersToggle  call NumbersToggle()
+command! -nargs=0 NumbersEnable  call NumbersEnable()
 command! -nargs=0 NumbersDisable call NumbersDisable()
-command! -nargs=0 NumbersOnOff call NumbersOnOff()
+command! -nargs=0 NumbersOnOff   call NumbersOnOff()
 
 " reset &cpo back to users setting
 let &cpo = s:save_cpo
