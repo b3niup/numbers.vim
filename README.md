@@ -4,7 +4,7 @@ numbers.vim
 numbers.vim is a plugin for intelligently toggling line numbers.  
 It is a fork of @myusuf3 [plugin][o].
 
-This plugin alternates between relative (`relatihenumber`), absolute (`number`)  
+This plugin alternates between relative (`relativenumber`), absolute (`number`)  
 and hidden line numbering for active window depending on the mode you are in.
 
 In `hidden` mode all event-based mode changes are turned off to keep numbers  
@@ -33,6 +33,22 @@ For pathogen users, clone the repo:
     git clone https://github.com/b3niup/numbers.vim.git ~/.vim/bundle/numbers
 
 
+Hiding numbers in plugins and files
+-----------------------------------
+
+If you would like to hide numbers in vim plugins or in files with specified filetype you can set custom g:numbers_exclude list in your .vimrc:
+
+    let g:numbers_exclude = ['nerdtree', 'html']
+
+This example will hide numbers in [NERD Tree][q] and all html files.
+
+By default plugin excludes following filetypes:
+
+    let g:numbers_exclude = ['minibufexpl', 'nerdtree', 'unite', 'tagbar', 'startify', 'gundo', 'vimshell', 'w3m']
+
+Be sure to include this superset in your .vimrc if you only would like to extend it.
+
+
 Usage
 -----
 
@@ -54,3 +70,4 @@ around line 104 in `plugin/numbers.vim`, but personally I do not like idea of ca
 [o]: https://github.com/myusuf3/numbers.vim
 [p]: https://github.com/tpope/vim-pathogen
 [v]: https://github.com/gmarik/vundle
+[q]: https://github.com/scrooloose/nerdtree
